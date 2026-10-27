@@ -29,11 +29,14 @@ jobs:
           source ~/esp/esp-idf-v6/export.sh
           cd esp32
           idf.py set-target esp32s3
-          # Insert token programmatically
+          
+          # Inject token securely
           if [ -n "$MUSE_SDK_TOKEN" ]; then
-            echo "CONFIG_GADGET_SDK_TOKEN=\"$MUSE_SDK_TOKEN\"" >> devices/sdkconfig.muse
+            echo "CONFIG_GADGET_SDK_TOKEN=\"$MUSE_SDK_TOKEN\"" > sdkconfig.token
           fi
-          idf.py -DSDKCONFIG_DEFAULTS="devices/sdkconfig.muse;devices/sdkconfig.muse-waveshare-s3-175c" build
+
+          # Build using the correct defaults chain for Waveshare S3
+          idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.token;devices/sdkconfig.muse;devices/sdkconfig.muse-waveshare-s3-175c" build
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
