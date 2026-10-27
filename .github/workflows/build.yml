@@ -1,4 +1,4 @@
-name: Build Muse Firmware (ESP32-C6)
+name: Build Muse Firmware (ESP32-S3 AMOLED 1.8)
 
 on: [push, workflow_dispatch]
 
@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir -p ~/esp
           git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v6
-          ~/esp/esp-idf-v6/install.sh esp32c6
+          ~/esp/esp-idf-v6/install.sh esp32s3
 
       - name: Build Firmware
         env:
@@ -28,17 +28,18 @@ jobs:
         run: |
           source ~/esp/esp-idf-v6/export.sh
           cd esp32
+          idf.py set-target esp32s3
           
           # Inject token securely
           if [ -n "$MUSE_SDK_TOKEN" ]; then
             echo "CONFIG_GADGET_SDK_TOKEN=\"$MUSE_SDK_TOKEN\"" > sdkconfig.token
           fi
 
-          # Build using the correct C6 1.8" board target
-          ./tools/board.sh c6-18 build
-          
+          # Build for the S3 target using the s3-175 / s3 base configuration profiles
+          idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.token;devices/sdkconfig.muse;devices/sdkconfig.muse-waveshare-s3-175c" build
+
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: esp32c6-muse-firmware
+          name: esp32s3-1.8-muse-firmware
           path: esp32/build/muse-gadget.bin
