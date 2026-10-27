@@ -28,16 +28,15 @@ jobs:
         run: |
           source ~/esp/esp-idf-v6/export.sh
           cd esp32
-          idf.py set-target esp32c6
           
           # Inject token securely
           if [ -n "$MUSE_SDK_TOKEN" ]; then
             echo "CONFIG_GADGET_SDK_TOKEN=\"$MUSE_SDK_TOKEN\"" > sdkconfig.token
           fi
 
-          # Build using the correct C6 Waveshare board wrapper script
-          ./tools/board.sh waveshare-c6-18 build
-
+          # Build using the correct C6 1.8" board target
+          ./tools/board.sh c6-18 build
+          
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
