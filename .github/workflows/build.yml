@@ -1,45 +1,14 @@
-name: Build Muse Firmware (ESP32-S3)
-
-on: [push, workflow_dispatch]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install ESP-IDF v6.0.1
-        run: |
-          mkdir -p ~/esp
-          git clone -b v6.0.1 --recursive https://github.com/espressif/esp-idf.git ~/esp/esp-idf-v6
-          ~/esp/esp-idf-v6/install.sh esp32s3
-
-      - name: Build Firmware
+- name: Build Firmware
         env:
           MUSE_SDK_TOKEN: ${{ secrets.MUSE_SDK_TOKEN }}
         run: |
           source ~/esp/esp-idf-v6/export.sh
           cd esp32
-          idf.py set-target esp32s3
           
           # Inject token securely
           if [ -n "$MUSE_SDK_TOKEN" ]; then
             echo "CONFIG_GADGET_SDK_TOKEN=\"$MUSE_SDK_TOKEN\"" > sdkconfig.token
           fi
 
-          # Build using the correct defaults chain for Waveshare S3
-          idf.py -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.token;devices/sdkconfig.muse;devices/sdkconfig.muse-waveshare-s3-175c" build
-
-      - name: Upload Binary Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: esp32s3-muse-firmware
-          path: esp32/build/muse-gadget.bin
+          # Use the repository's board wrapper script targeting the 1.8-inch S3 AMOLED profile
+          ./tools/board.sh waveshare-s3-185c build
